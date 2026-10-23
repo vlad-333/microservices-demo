@@ -33,7 +33,7 @@ resource "helm_release" "argocd_apps" {
           project   = "default"
           source = {
             repoURL        = "https://github.com/vlad-333/microservices-demo.git"
-            targetRevision = "main"
+            targetRevision = "dev"
             path           = "helm-chart"
           }
           destination = {
