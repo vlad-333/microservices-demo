@@ -16,7 +16,9 @@
 *.pyc
 *.swp
 *.tfstate*
+*.tfstate.*
 *.tfvars
+*.tfvars.json
 *~
 bin/
 build/
@@ -27,3 +29,15 @@ pkg/
 release/wi-kubernetes-manifests.yaml
 vendor/
 gha-creds-*.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.tfstate.lock.info
+*tfplan*
+.terraformrc
+terraform.rc
+planout
+demo-config
