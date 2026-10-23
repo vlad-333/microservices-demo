@@ -1,12 +1,16 @@
 provider "kubernetes" {
-  config_path    = "~/.kube/config"
-  config_context = "kind-${var.cluster_name}"
+  host                   = module.kind.endpoint
+  client_certificate     = module.kind.client_certificate
+  client_key             = module.kind.client_key
+  cluster_ca_certificate = module.kind.cluster_ca_certificate
 }
 
 provider "helm" {
   kubernetes = {
-    config_path    = "~/.kube/config"
-    config_context = "kind-${var.cluster_name}"
+    host                   = module.kind.endpoint
+    client_certificate     = module.kind.client_certificate
+    client_key             = module.kind.client_key
+    cluster_ca_certificate = module.kind.cluster_ca_certificate
   }
 }
 
