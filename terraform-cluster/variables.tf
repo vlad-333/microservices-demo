@@ -3,6 +3,6 @@ variable "cluster_name" {
 }
 
 variable "ns" {
-  default = ["monitor", "boutique"]
+  default = ["monitor", "argo", "boutique"]
   type    = list(string)
 }

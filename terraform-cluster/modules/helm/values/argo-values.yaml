@@ -1,0 +1,41 @@
+global:
+  domain: argocd.localhost
+
+configs:
+  params:
+    server.insecure: true
+    # serve HTTP so port-forward works without TLS warnings
+
+dex:
+  enabled: false
+  # no SSO needed locally
+
+notifications:
+  enabled: false
+  # enable later if you want to practice it
+
+applicationSet:
+  enabled: true
+  # useful for app-of-apps / multi-env practice
+
+server:
+  service:
+    type: ClusterIP
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits:   { memory: 256Mi }
+
+controller:
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { memory: 512Mi }
+
+repoServer:
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits:   { memory: 256Mi }
+
+redis:
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits:   { memory: 128Mi }
