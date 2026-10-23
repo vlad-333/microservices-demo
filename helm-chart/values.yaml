@@ -17,7 +17,7 @@
 # Declare variables to be passed into your templates.
 
 images:
-  repository: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo
+  repository: ghcr.io/vlad-333
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
