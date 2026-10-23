@@ -1,0 +1,91 @@
+name: build-images
+
+on:
+  push:
+    branches: [dev]
+    paths: ["src/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: frontend
+            context: src/frontend
+          - service: cartservice
+            context: src/cartservice/src
+          - service: checkoutservice
+            context: src/checkoutservice
+          - service: adservice
+            context: src/adservice
+          - service: currencyservice
+            context: src/currencyservice
+          - service: emailservice
+            context: src/emailservice
+          - service: loadgenerator
+            context: src/loadgenerator
+          - service: paymentservice
+            context: src/paymentservice
+          - service: productcatalogservice
+            context: src/productcatalogservice
+          - service: recommendationservice
+            context: src/recommendationservice
+          - service: shippingservice
+            context: src/shippingservice
+          - service: shoppingassistantservice
+            context: src/shoppingassistantservice
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  # update-manifests:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Bump image tags
+  #       run: |
+  #         SHA=$(git rev-parse --short HEAD)
+  #         cd kustomize   # wherever your kustomization.yaml lives
+  #         for svc in frontend cartservice checkoutservice; do
+  #           kustomize edit set image $svc=ghcr.io/${{ github.repository_owner }}/$svc:sha-$SHA
+  #         done
+  #         git config user.name "github-actions"
+  #         git config user.email "github-actions@users.noreply.github.com"
+  #         git commit -am "ci: bump images to $SHA [skip ci]"
+  #         git push
