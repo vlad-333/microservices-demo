@@ -121,6 +121,7 @@ resource "helm_release" "argocd_apps" {
                   prometheusSpec = {
                     retention                               = "3d"
                     serviceMonitorSelectorNilUsesHelmValues = false
+                    podMonitorSelectorNilUsesHelmValues     = false
                     resources = {
                       requests = { cpu = "100m", memory = "512Mi" }
                       limits   = { memory = "1536Mi" }
