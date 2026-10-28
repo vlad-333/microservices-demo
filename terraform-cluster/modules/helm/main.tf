@@ -1,12 +1,12 @@
-resource "helm_release" "monitor" {
-  name            = "monitor-stack"
-  repository      = "https://prometheus-community.github.io/helm-charts"
-  chart           = "kube-prometheus-stack"
-  version         = "92.11.0"
-  namespace       = "monitor"
-  cleanup_on_fail = true
-  timeout         = 600
-}
+# resource "helm_release" "monitor" {
+#   name            = "monitor-stack"
+#   repository      = "https://prometheus-community.github.io/helm-charts"
+#   chart           = "kube-prometheus-stack"
+#   version         = "92.11.0"
+#   namespace       = "monitor"
+#   cleanup_on_fail = true
+#   timeout         = 600
+# }
 
 resource "helm_release" "argo" {
   name            = "argo-cd"
@@ -39,6 +39,98 @@ resource "helm_release" "argocd_apps" {
           destination = {
             server    = "https://kubernetes.default.svc"
             namespace = "boutique"
+          }
+          syncPolicy = {
+            automated   = { prune = true, selfHeal = true }
+            syncOptions = ["CreateNamespace=true"]
+          }
+        }
+
+        monitoring = {
+          namespace = "argo"
+          project   = "default"
+          source = {
+            repoURL        = "https://prometheus-community.github.io/helm-charts"
+            chart          = "kube-prometheus-stack"
+            targetRevision = "92.11.0"
+            helm = {
+              releaseName = "monitor-stack"
+              valuesObject = {
+                prometheus = {
+                  prometheusSpec = {
+                    retention                               = "3d"
+                    serviceMonitorSelectorNilUsesHelmValues = false
+                    resources = {
+                      requests = { cpu = "100m", memory = "512Mi" }
+                      limits   = { memory = "1Gi" }
+                    }
+                  }
+                }
+                grafana = {
+                  enabled = true
+                  resources = {
+                    requests = { memory = "128Mi" }
+                    limits   = { memory = "256Mi" }
+                  }
+                }
+                alertmanager = {
+                  alertmanagerSpec = {
+                    resources = {
+                      requests = { memory = "32Mi" }
+                      limits   = { memory = "128Mi" }
+                    }
+                  }
+                }
+                kubeEtcd              = { enabled = false }
+                kubeScheduler         = { enabled = false }
+                kubeControllerManager = { enabled = false }
+                kubeProxy             = { enabled = false }
+              }
+            }
+          }
+          destination = {
+            server    = "https://kubernetes.default.svc"
+            namespace = "monitor"
+          }
+          syncPolicy = {
+            automated = {
+              prune    = true
+              selfHeal = true
+            }
+            syncOptions = [
+              "CreateNamespace=true",
+              "ServerSideApply=true",
+            ]
+          }
+        }
+
+        blackbox = {
+          namespace = "argo"
+          project   = "default"
+          source = {
+            repoURL        = "https://prometheus-community.github.io/helm-charts"
+            chart          = "prometheus-blackbox-exporter"
+            targetRevision = "11.0.0"
+            helm = {
+              releaseName = "blackbox"
+              valuesObject = {
+                serviceMonitor = {
+                  enabled = true
+                  targets = [
+                    {
+                      name     = "frontend"
+                      url      = "http://frontend.default.svc:80"
+                      interval = "30s"
+                      module   = "http_2xx"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+          destination = {
+            server    = "https://kubernetes.default.svc"
+            namespace = "monitor"
           }
           syncPolicy = {
             automated   = { prune = true, selfHeal = true }
