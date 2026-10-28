@@ -62,15 +62,15 @@ resource "helm_release" "argocd_apps" {
                     serviceMonitorSelectorNilUsesHelmValues = false
                     resources = {
                       requests = { cpu = "100m", memory = "512Mi" }
-                      limits   = { memory = "1Gi" }
+                      limits   = { memory = "1536Mi" }
                     }
                   }
                 }
                 grafana = {
                   enabled = true
                   resources = {
-                    requests = { memory = "128Mi" }
-                    limits   = { memory = "256Mi" }
+                    requests = { memory = "256Mi" }
+                    limits   = { memory = "512Mi" }
                   }
                 }
                 alertmanager = {
@@ -79,6 +79,12 @@ resource "helm_release" "argocd_apps" {
                       requests = { memory = "32Mi" }
                       limits   = { memory = "128Mi" }
                     }
+                  }
+                }
+                sidecar = {
+                  resources = {
+                    requests = { memory = "64Mi" }
+                    limits   = { memory = "128Mi" }
                   }
                 }
                 kubeEtcd              = { enabled = false }
@@ -119,7 +125,7 @@ resource "helm_release" "argocd_apps" {
                   targets = [
                     {
                       name     = "frontend"
-                      url      = "http://frontend.default.svc:80"
+                      url      = "http://frontend.boutique.svc:80"
                       interval = "30s"
                       module   = "http_2xx"
                     }
