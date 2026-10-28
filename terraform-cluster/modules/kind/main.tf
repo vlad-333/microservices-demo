@@ -12,6 +12,10 @@ resource "kind_cluster" "default" {
       role = "worker"
     }
   }
+
+  provisioner "local-exec" {
+    command = "kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.1/standard-install.yaml"
+  }
 }
 
 resource "kubernetes_namespace_v1" "namespace" {
