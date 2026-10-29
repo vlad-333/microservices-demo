@@ -12,9 +12,28 @@ permissions:
   security-events: write
 
 jobs:
+  trivy-db:
+    runs-on: ubuntu-latest
+    steps:
+      - id: date
+        run: echo "date=$(date +%F)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: .trivy-cache
+          key: trivy-db-${{ steps.date.outputs.date }}
+      - uses: aquasecurity/setup-trivy@v0.2.2
+        with:
+          version: latest
+      - name: Download DBs
+        run: |
+          trivy image --download-db-only
+          trivy image --download-java-db-only
+
   build:
+    needs: trivy-db
     runs-on: ubuntu-26.04
     env:
+      TRIVY_CACHE_DIR: ${{ github.workspace }}/.trivy-cache
       TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
       TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
     strategy:
@@ -51,6 +70,16 @@ jobs:
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
+      - id: date
+        run: echo "date=$(date +%F)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Trivy DB
+        uses: actions/cache/restore@v4
+        with:
+          path: .trivy-cache
+          key: trivy-db-${{ steps.date.outputs.date }}
+          fail-on-cache-miss: true
+
       # 1. Build amd64 only, load into the local daemon for scanning
       - name: Build image for scan
         uses: docker/build-push-action@v6
@@ -65,6 +94,9 @@ jobs:
       # 2. Report to the Security tab (never fails the job)
       - name: Trivy scan (SARIF)
         uses: aquasecurity/trivy-action@v0.36.0
+        env:
+          TRIVY_SKIP_DB_UPDATE: "true"
+          TRIVY_SKIP_JAVA_DB_UPDATE: "true"
         with:
           image-ref: scan-target:${{ github.sha }}
           format: sarif
@@ -77,7 +109,7 @@ jobs:
 
       - name: Upload SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-${{ matrix.service }}.sarif
           category: trivy-${{ matrix.service }}
@@ -85,6 +117,9 @@ jobs:
       # 3. Gate: fail this service's job on HIGH/CRITICAL
       - name: Trivy gate
         uses: aquasecurity/trivy-action@v0.36.0
+        env:
+          TRIVY_SKIP_DB_UPDATE: "true"
+          TRIVY_SKIP_JAVA_DB_UPDATE: "true"
         with:
           image-ref: scan-target:${{ github.sha }}
           format: table
