@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
       TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
@@ -64,7 +64,7 @@ jobs:
 
       # 2. Report to the Security tab (never fails the job)
       - name: Trivy scan (SARIF)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           image-ref: scan-target:${{ github.sha }}
           format: sarif
@@ -84,7 +84,7 @@ jobs:
 
       # 3. Gate: fail this service's job on HIGH/CRITICAL
       - name: Trivy gate
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           image-ref: scan-target:${{ github.sha }}
           format: table
@@ -118,7 +118,7 @@ jobs:
 
   update-manifests:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
