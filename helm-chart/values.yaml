@@ -19,7 +19,7 @@
 images:
   repository: ghcr.io/vlad-333
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "sha-fea6df2"
+  tag: "sha-0205ace"
 serviceAccounts:
   # Specifies whether service accounts should be created.
   create: true
